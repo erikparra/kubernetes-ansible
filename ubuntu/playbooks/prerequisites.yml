@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - env_variables
+  tasks:
+  - name: Disabling Swap on all nodes
+    shell: swapoff -a
+    when: kubernetes_installed is changed
+  - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+    replace:
+      path: /etc/fstab
+      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+      replace: '# \1'
+    when: kubernetes_installed is changed
+  - name: create the 'ubuntu' user
+    user: name=ubuntu append=yes state=present createhome=yes shell=/bin/bash
+
+  - name: allow 'ubuntu' to have passwordless sudo
+    lineinfile:
+      dest: /etc/sudoers
+      line: 'ubuntu ALL=(ALL) NOPASSWD: ALL'
+      validate: 'visudo -cf %s'
+
+  - name: set up authorized keys for the ubuntu user
+    authorized_key: user=ubuntu key="{{item}}"
+    with_file:
+    - /Users/erikparra/.ssh/parraserver.pub

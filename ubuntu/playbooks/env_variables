@@ -1,0 +1,18 @@
+cidr_v: 10.10.0.0/16
+
+packages:
+- apt-transport-https
+- docker.io
+- kubelet=1.18.0-00
+- kubeadm=1.18.0-00
+- curl
+- nfs-common
+
+master-packages:
+- kubectl=1.18.0-00
+
+services:
+- docker
+- kubelet
+
+token_file: join_token

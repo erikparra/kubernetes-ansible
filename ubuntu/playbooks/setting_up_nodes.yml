@@ -1,0 +1,41 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - env_variables
+  tasks:
+   - name: add Kubernetes apt-key
+     apt_key:
+       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+       state: present
+
+   - name: add Kubernetes' APT repository
+     apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: 'kubernetes'
+
+   - name: install required packages
+     apt:
+       name: "{{ item }}"
+       state: present
+       update_cache: true
+     with_items: "{{ packages }}"
+
+   - name: Starting and Enabling the required services
+     service:
+       name: "{{ item }}"
+       state: started
+       enabled: yes
+     with_items: "{{ services }}"
+
+
+- hosts: masters
+  become: yes
+  tasks:
+   - name: install required master node packages
+     apt:
+       name: "{{ item }}"
+       state: present
+       update_cache: true
+     with_items: "{{ packages }}"
