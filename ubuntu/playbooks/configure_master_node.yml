@@ -1,8 +1,7 @@
----
 - hosts: masters
   become: yes
   vars_files:
-    - env_variables
+  - env_variables
   tasks:
     - name: Pulling images required for setting up a Kubernetes cluster
       shell: kubeadm config images pull
@@ -12,17 +11,22 @@
       register: output
 
     - name: Initializing Kubernetes cluster
-      shell: kubeadm init --pod-network-cidr={{cidr_v}}
-      register: output
+      shell: kubeadm init --pod-network-cidr={{cidr_v}} >> cluster_initialized.txt
+      args:
+        chdir: $HOME
+        creates: cluster_initialized.txt
 
     - name: Storing Logs and Generated token for future purpose.
-      local_action: copy content={{ output.stdout }} dest={{ token_file }}
-      sudo: False
+#      local_action: copy content={{ output.stdout }} dest={{ token_file }}
+      delegate_to: localhost
+      copy:
+        src: $HOME/cluster_initialized.txt
+        dest: {{token_file}}
 
     - name: create .kube directory
       become: yes
       become_user: ubuntu
-        file:
+      file:
         path: $HOME/.kube
         state: directory
         mode: 0755
@@ -34,5 +38,10 @@
         remote_src: yes
         owner: ubuntu
 
-    - name: Install Network Add-on
-      command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    - name: Install Pod network
+      become: yes
+      become_user: ubuntu
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml >> pod_network_setup.txt
+      args:
+          chdir: $HOME
+          creates: pod_network_setup.txt

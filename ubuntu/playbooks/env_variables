@@ -2,14 +2,19 @@ cidr_v: 10.10.0.0/16
 
 packages:
 - apt-transport-https
-- docker.io
-- kubelet=1.18.0-00
-- kubeadm=1.18.0-00
+- ca-certificates
 - curl
+- software-properties-common
+- gnupg2
+- python3-pip
+- virtualenv
+- python3-setuptools
+- kubelet
+- kubeadm
 - nfs-common
 
-master-packages:
-- kubectl=1.18.0-00
+masterpackages:
+- kubectl
 
 services:
 - docker
