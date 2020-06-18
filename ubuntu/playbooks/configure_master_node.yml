@@ -10,18 +10,22 @@
       shell: kubeadm reset -f
       register: output
 
+    - name: Remove cluster_initialized.txt file
+      file:
+        path: /root/cluster_initialized.txt
+        state: absent
+
     - name: Initializing Kubernetes cluster
-      shell: kubeadm init --pod-network-cidr={{cidr_v}} >> cluster_initialized.txt
+      shell: kubeadm init --pod-network-cidr={{cidr_v}} --allocate-node-cidrs=true >> cluster_initialized.txt
       args:
         chdir: $HOME
         creates: cluster_initialized.txt
 
     - name: Storing Logs and Generated token for future purpose.
-#      local_action: copy content={{ output.stdout }} dest={{ token_file }}
-      delegate_to: localhost
-      copy:
-        src: $HOME/cluster_initialized.txt
-        dest: {{token_file}}
+      fetch:
+        src: /root/cluster_initialized.txt
+        dest: token/{{token_file}}
+        flat: yes
 
     - name: create .kube directory
       become: yes
